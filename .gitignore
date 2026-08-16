@@ -17,7 +17,8 @@ board_out.npz
 # Model weights (download from ultralytics)
 *.pt
 
-# Media (stage1_demo.mp4 is deliberately tracked for the README demo; other video formats ignored)
+# Media (stage1_demo.mp4 kept locally for LinkedIn, not tracked in this repo)
+media/stage1_demo.mp4
 *.avi
 *.mov
 

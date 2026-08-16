@@ -240,8 +240,6 @@ Captured on the real hardware (2026-08-16). Photos and the demo video live in `m
 
 ![Stage 1 — live demo photo](media/stage1_photo.jpeg)
 
-<video src="media/stage1_demo.mp4" controls preload="metadata" style="max-width:100%;"></video>
-
 ## Roadmap
 
 **Stage 1 — complete (current):** full-model DPU inference with a pure-numpy CPU decode path. The pipeline is real-time and works end-to-end on the board: USB camera → letterbox → DPU → DFL decode + NMS → web dashboard.

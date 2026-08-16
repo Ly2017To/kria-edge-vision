@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Build artifacts (regenerate via quantize_yolov8n_full.py + compiler)
+compiled_*/
+quantize_result_full/*.xmodel
+backup_pre_routeB/
+
+# Calibration / intermediate data
+.calib*
+.coco128/
+input_640.npy
+board_out.npz
+
+# Model weights (download from ultralytics)
+*.pt
+
+# Media (stage1_demo.mp4 is deliberately tracked for the README demo; other video formats ignored)
+*.avi
+*.mov
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Board runtime (install from AMD repos instead)
+*.tar.gz
+*.rpm

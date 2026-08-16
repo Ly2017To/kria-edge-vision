@@ -1,0 +1,11 @@
+[Unit]
+Description=Load DPU B4096 bitstream into PL
+After=dfx-mgr.service
+Before=kv260-vision.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'xmutil unloadapp >/dev/null 2>&1; xmutil loadapp benchmark-b4096'
+
+[Install]
+WantedBy=multi-user.target

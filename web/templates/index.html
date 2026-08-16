@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kria Edge Vision — Real-Time Object Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050507;
+  --text:#f5f5f7;
+  --dim:rgba(245,245,247,.55);
+  --faint:rgba(245,245,247,.35);
+  --card:rgba(255,255,255,.045);
+  --line:rgba(255,255,255,.09);
+  --line-soft:rgba(255,255,255,.14);
+  --indigo:#5e5ce6;
+  --pink:#ff375f;
+  --mint:#30d158;
+  --orange:#ff9f0a;
+  --radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  min-height:100vh;color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
+  font-weight:400;letter-spacing:.1px;-webkit-font-smoothing:antialiased;
+  background:var(--bg);overflow-x:hidden;
+}
+/* Apple-style aurora accents */
+.aurora{position:fixed;inset:0;pointer-events:none;z-index:0}
+.aurora .orb{
+  position:absolute;border-radius:50%;filter:blur(110px);opacity:.5;
+  mix-blend-mode:screen;animation:drift 26s ease-in-out infinite alternate;
+}
+.aurora .o1{width:560px;height:560px;background:radial-gradient(circle,rgba(94,92,230,.34),transparent 68%);top:-180px;left:-120px}
+.aurora .o2{width:480px;height:480px;background:radial-gradient(circle,rgba(191,90,242,.26),transparent 66%);top:-80px;right:-140px;animation-delay:-8s}
+.aurora .o3{width:520px;height:520px;background:radial-gradient(circle,rgba(255,55,95,.16),transparent 68%);bottom:-220px;left:28%;animation-delay:-16s}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(40px,-30px)}}
+
+.wrap{position:relative;z-index:1;max-width:1380px;margin:0 auto;padding:52px 34px 66px}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:42px}
+.brand .wordmark{font-size:28px;font-weight:600;letter-spacing:.4px}
+.brand .wordmark em{font-style:normal;font-weight:600;
+  background:linear-gradient(92deg,#5e5ce6 0%,#bf5af2 48%,#ff375f 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .subtitle{margin-top:8px;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:19px;color:var(--dim)}
+
+.conn{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--dim);letter-spacing:.6px;padding-bottom:4px}
+.conn .led{width:8px;height:8px;border-radius:50%;background:#ff453a;box-shadow:0 0 10px rgba(255,69,58,.8);transition:.4s}
+.conn.ok .led{background:var(--mint);box-shadow:0 0 10px rgba(48,209,88,.8)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(330px,1fr);gap:28px;align-items:start}
+@media(max-width:1024px){.grid{grid-template-columns:1fr}}
+
+/* ---- video stage ---- */
+.video-card{
+  position:relative;border-radius:var(--radius);overflow:hidden;
+  background:#0a0a0f;border:1px solid var(--line);
+  box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02);
+  aspect-ratio:4/3;
+}
+.video-card::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 0%,rgba(94,92,230,.10),transparent 55%);
+}
+.video-card img{width:100%;height:100%;object-fit:contain;display:block}
+.caption{
+  margin-top:16px;text-align:center;font-family:"Cormorant Garamond",serif;
+  font-style:italic;font-size:17px;color:var(--faint);letter-spacing:.5px;
+}
+.caption b{color:var(--dim);font-weight:500}
+
+/* ---- side panel ---- */
+.panel{display:flex;flex-direction:column;gap:20px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.metric{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:20px 22px 18px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.metric .k{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--dim)}
+.metric .v{margin-top:7px;font-size:37px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.metric .v small{font-size:15px;font-weight:400;color:var(--faint);margin-left:4px;letter-spacing:0}
+.metric .accent{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:9px;vertical-align:2px}
+.metric.fps .accent{background:var(--indigo);box-shadow:0 0 10px rgba(94,92,230,.8)}
+.metric.src .v{font-size:24px;line-height:1.35}
+.metric.src .accent{background:var(--orange);box-shadow:0 0 10px rgba(255,159,10,.8)}
+.metric .sub{margin-top:7px;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.metric .sub b{color:var(--dim);font-weight:600}
+
+.latgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.lat{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:18px 20px 16px;min-width:0}
+.lat.whole{grid-column:1/-1;background:linear-gradient(135deg,rgba(94,92,230,.14),rgba(255,255,255,.02));border-color:rgba(94,92,230,.45)}
+.lat.whole .v{font-size:38px}
+.lat .k{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim)}
+.lat .v{margin-top:7px;font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.5px;white-space:nowrap}
+.lat .v small{font-size:14px;font-weight:400;color:var(--faint);margin-left:4px;letter-spacing:0}
+.lat .sub{margin-top:7px;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;letter-spacing:.2px;line-height:1.5}
+.lat .sub b{color:var(--dim);font-weight:600}
+@media(max-width:560px){.latgrid{grid-template-columns:1fr}}
+
+.section{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 22px 16px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.section .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section h3{font-size:12px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--dim)}
+.section .badge{
+  font-size:12px;font-weight:500;color:var(--text);
+  background:linear-gradient(92deg,rgba(94,92,230,.28),rgba(255,55,95,.22));
+  border:1px solid var(--line-soft);padding:2px 12px;border-radius:999px;
+}
+footer{margin-top:40px;text-align:center;font-size:12.5px;color:var(--faint);letter-spacing:.8px}
+footer b{font-weight:600;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="aurora"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="wordmark">Kria Edge <em>Vision</em></div>
+      <div class="subtitle">real-time object detection · YOLOv8n · Vitis AI DPU</div>
+    </div>
+    <div class="conn" id="conn"><span class="led"></span><span id="connTxt">Connecting…</span></div>
+  </header>
+
+  <div class="grid">
+    <div class="stage">
+      <div class="video-card">
+        <img id="stream" src="/video_feed" alt="Live detection stream">
+      </div>
+      <div class="caption">Every frame, a <b>still life</b> in the making</div>
+    </div>
+
+    <div class="panel">
+      <div class="metrics">
+        <div class="metric fps"><div class="k"><span class="accent"></span>Frame rate</div><div class="v" id="mFps">--<small>FPS</small></div></div>
+        <div class="metric src"><div class="k"><span class="accent"></span>Source</div><div class="v" id="mSrc">--</div></div>
+      </div>
+
+      <div class="section">
+        <div class="head"><h3>Latency</h3><span class="badge" id="latBadge">-- ms</span></div>
+        <div class="latgrid">
+          <div class="lat whole">
+            <div class="k">Whole frame · wall clock</div>
+            <div class="v" id="mTotal">--<small>ms</small></div>
+            <div class="sub">Σ work <b id="mWork">--</b>ms · pipeline overlaps <b id="mOverlap">--</b>ms<br>CPU <b id="mCpu">--</b> · DPU <b id="mDpuIn">--</b> · Other <b id="mOtherIn">--</b> ms</div>
+          </div>
+          <div class="lat">
+            <div class="k">DPU</div>
+            <div class="v" id="mDpuB">--<small>ms</small></div>
+            <div class="sub">Vitis AI DPU</div>
+          </div>
+          <div class="lat">
+            <div class="k">CPU prep</div>
+            <div class="v" id="mLbB">--<small>ms</small></div>
+            <div class="sub">letterbox + normalize</div>
+          </div>
+          <div class="lat">
+            <div class="k">CPU decode</div>
+            <div class="v" id="mDecB">--<small>ms</small></div>
+            <div class="sub">DFL + NMS + inverse</div>
+          </div>
+          <div class="lat">
+            <div class="k">CPU other</div>
+            <div class="v" id="mOtherB">--<small>ms</small></div>
+            <div class="sub">read · draw · encode</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>Kria Edge Vision · powered by <b>AMD Kria KV260</b> · Vitis AI DPU · YOLOv8n</footer>
+</div>
+
+<script>
+var SRC = {camera:"USB Camera", demo:"Demo Gallery", starting:"Starting"};
+var conn = document.getElementById('conn');
+var stream = document.getElementById('stream');
+var dead = 0;
+stream.onerror = function(){ dead = 1; setTimeout(function(){ stream.src = '/video_feed?t=' + Date.now(); }, 600); };
+stream.onload = function(){ dead = 0; conn.classList.add('ok'); document.getElementById('connTxt').textContent = 'Live'; };
+
+function fmtSrc(s){ return SRC[s] || s; }
+
+function poll(){
+  fetch('/api/status').then(function(r){ return r.json(); }).then(function(d){
+    document.getElementById('mFps').innerHTML = d.fps.toFixed(1) + '<small>FPS</small>';
+    document.getElementById('mTotal').innerHTML = d.clock_ms.toFixed(1) + '<small>ms</small>';
+    document.getElementById('latBadge').textContent = d.clock_ms.toFixed(1) + ' ms';
+    document.getElementById('mWork').textContent = d.total_ms.toFixed(1);
+    document.getElementById('mOverlap').textContent = Math.max(d.total_ms - d.clock_ms, 0).toFixed(1);
+    document.getElementById('mDpuIn').textContent = d.dpu_ms.toFixed(1);
+    document.getElementById('mDpuB').innerHTML = d.dpu_ms.toFixed(1) + '<small>ms</small>';
+    document.getElementById('mLbB').innerHTML = d.lb_ms.toFixed(1) + '<small>ms</small>';
+    document.getElementById('mDecB').innerHTML = d.dec_ms.toFixed(1) + '<small>ms</small>';
+    document.getElementById('mCpu').textContent = d.cpu_ms.toFixed(1);
+    document.getElementById('mOtherIn').textContent = d.other_ms.toFixed(1);
+    document.getElementById('mOtherB').innerHTML = d.other_ms.toFixed(1) + '<small>ms</small>';
+    document.getElementById('mSrc').textContent = fmtSrc(d.source);
+    if(dead === 0){ conn.classList.add('ok'); document.getElementById('connTxt').textContent = 'Live'; }
+  }).catch(function(){
+    conn.classList.remove('ok');
+    document.getElementById('connTxt').textContent = 'Reconnecting…';
+  });
+}
+setInterval(poll, 1000);
+poll();
+</script>
+</body>
+</html>

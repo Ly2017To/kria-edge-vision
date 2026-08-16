@@ -1,0 +1,16 @@
+[Unit]
+Description=KV260 YOLOv8n Vision Web Service (Kria Edge Vision)
+After=network.target dpu-load.service
+Requires=dpu-load.service
+
+[Service]
+Type=simple
+Environment=LD_PRELOAD=/usr/local/lib/libxcl_stub.so
+WorkingDirectory=/home/ubuntu/kv260/yolov8-dpu/web
+ExecStart=/usr/bin/python3 /home/ubuntu/kv260/yolov8-dpu/web/app.py --port 8080
+Restart=always
+RestartSec=3
+User=ubuntu
+
+[Install]
+WantedBy=multi-user.target

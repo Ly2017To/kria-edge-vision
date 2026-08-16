@@ -93,7 +93,7 @@ kria-edge-vision/
 │   ├── templates/index.html    #   dashboard UI (Apple-design dark theme)
 │   └── start_web.sh            #   manual start script
 ├── steps.md                    #   full build log (quantize → deploy → web)
-└── linkedin_intro.md           #   short project intro for LinkedIn / interviews
+└── LICENSE                     #   MIT license
 ```
 
 ## How It Works
@@ -240,7 +240,7 @@ Captured on the real hardware (2026-08-16). Photos and the demo video live in `m
 
 ![Stage 1 — live demo photo](media/stage1_photo.jpeg)
 
-![Stage 1 — demo video (H.264 MP4, plays inline)](media/stage1_demo.mp4)
+<video src="media/stage1_demo.mp4" controls preload="metadata" style="max-width:100%;"></video>
 
 ## Roadmap
 
@@ -264,4 +264,4 @@ Goal: keep the DPU + PL as the complete inference engine so the ARM CPU drops ou
 ## See Also
 
 - `steps.md` — the complete build log: environment setup, quantization runs, DPU compile, board bring-up, and web development history.
-- `linkedin_intro.md` — a short project intro you can paste into a LinkedIn post or the "Projects" section.
+- `LICENSE` — MIT license; free to use and modify with attribution.
